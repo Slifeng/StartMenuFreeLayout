@@ -8,6 +8,8 @@
 
 前往 [Releases](https://github.com/12365adwd/StartMenuFreeLayout/releases) 下载 `StartMenuFreeLayout-v3.3.2-win-x64-8x7.zip`。GitHub 自动生成的 Source code 压缩包只有源码，不包含可运行程序。
 
+[直接下载可运行 ZIP](https://github.com/12365adwd/StartMenuFreeLayout/raw/refs/heads/main/dist/StartMenuFreeLayout-v3.3.2-win-x64-8x7.zip) · [SHA256 校验值](dist/SHA256SUMS.txt)
+
 ## 功能
 
 - 单击打开快捷方式，不按 Ctrl 也能直接拖动；拖动松开不会误启动应用。
