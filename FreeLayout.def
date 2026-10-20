@@ -1,0 +1,5 @@
+LIBRARY FreeLayout
+EXPORTS
+    DllGetClassObject
+    DllCanUnloadNow
+    AttachToStart
