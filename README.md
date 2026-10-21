@@ -4,7 +4,7 @@
 
 ## 下载
 
-[下载方向键修复版（含安装包和源码）](https://github.com/Slifeng/StartMenuFreeLayout/raw/refs/tags/v3.4.0-keyboard.1/dist/StartMenuFreeLayout-v3.4.0-keyboard.1-win-x64-8x7.zip) · [版本发布页](https://github.com/Slifeng/StartMenuFreeLayout/releases/tag/v3.4.0-keyboard.1)
+[下载方向键修复版（含安装包和源码）](https://github.com/Slifeng/StartMenuFreeLayout/raw/refs/tags/v3.4.0-keyboard.2/dist/StartMenuFreeLayout-v3.4.0-keyboard.2-win-x64-8x7.zip) · [版本发布页](https://github.com/Slifeng/StartMenuFreeLayout/releases/tag/v3.4.0-keyboard.2)
 
 ## 本次修复：方向键跟随自由布局
 

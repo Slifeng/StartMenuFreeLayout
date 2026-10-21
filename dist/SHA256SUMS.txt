@@ -1,3 +1,3 @@
 c68f8ddc681253f8a6706ae9a059b2f95823f494b71e0eb4b72c449234f46c72  StartMenuFreeLayout-v3.3.2-win-x64-8x7.zip
 0b8cf12c8c0ee0c8f5cfe10a1325e55f48e100518bca62d1a0b757109be342dc  StartMenuFreeLayout-v3.4.0-win-x64-8x7.zip
-d9712d437a792ddbb5d8a7bbdc1f80849ec1bc2c1d437b1ad35815db4a9b9704  StartMenuFreeLayout-v3.4.0-keyboard.1-win-x64-8x7.zip
+096bcc509a880b4802dc9deed615adfef18aac99ab9fb1be2faa10daee00cb5f  StartMenuFreeLayout-v3.4.0-keyboard.2-win-x64-8x7.zip
