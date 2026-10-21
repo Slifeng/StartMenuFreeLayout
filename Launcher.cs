@@ -12,7 +12,7 @@ using Microsoft.Win32;
 internal static partial class Program
 {
     static readonly string Dir=AppDomain.CurrentDomain.BaseDirectory;
-    static readonly string Ini=Path.Combine(Dir,"layout.ini");
+    static readonly string Ini=Deployment.Config;
     const string ExpectedVersion="10.0.26100.7309";
     [DllImport("kernel32.dll",CharSet=CharSet.Unicode,SetLastError=true)]
     static extern IntPtr LoadLibraryEx(string file,IntPtr reserved,uint flags);
@@ -71,8 +71,10 @@ internal static partial class Program
     }
     static void EnsureSettings()
     {
-        if(!File.Exists(Ini))File.WriteAllText(Ini,"[Settings]\r\nMode=inspect\r\nCanvasHeight=440\r\n",Encoding.ASCII);
+        Directory.CreateDirectory(Deployment.Data);
+        if(!File.Exists(Ini))File.WriteAllText(Ini,"[Settings]\r\nMode=inspect\r\nEditMode=2\r\nLastMode=system\r\nGridRows=7\r\n",Encoding.Unicode);
     }
+    public static void SetForUninstall(){Write("Settings","Mode","inspect");Write("Settings","AutoStart","0");Write("Settings","LastMode","system");}
     static bool AlreadyLoaded(Process p)
     {
         string path=Path.Combine(Dir,"FreeLayout.dll");
@@ -124,6 +126,27 @@ internal static partial class Program
     [STAThread]
     static int Main(string[] args)
     {
+        try {
+#if UNINSTALLER
+            return Deployment.Uninstall(args.Any(a=>a.Equals("/uninstall-silent",StringComparison.OrdinalIgnoreCase)));
+#else
+            if(args.Length>0&&(args[0]=="/uninstall"||args[0]=="/uninstall-silent"))return Deployment.Uninstall(args[0]=="/uninstall-silent");
+            if(args.Length>0&&args[0]=="/register-install"){Deployment.SetInstallContext(args[2],args[3]);Deployment.RegisterInstall(args[1]);return 0;}
+            if(args.Length>0&&args[0]=="/prepare-uninstall"){Deployment.SetInstallContext(args[1],args[2]);Deployment.PrepareUninstall();return 0;}
+            if(args.Length>0&&args[0]=="/launch-control"){Deployment.SetInstallContext(args[1],args[2]);Deployment.StartVisible(Deployment.AssemblyPath);return 0;}
+#if LIFECYCLE_TEST
+            if(args.Length>0&&args[0]=="/lifecycle-selftest") {
+                Deployment.SetInstallContext(args[1],args[2]);
+                Run("free");if(Run("saved-mode")!="free")throw new Exception("Saved mode mismatch");
+                Run("startup-on");
+                if(!Deployment.StartupValue().StartsWith("\""+Application.ExecutablePath+"\""))throw new Exception("Startup path mismatch");
+                File.WriteAllText(Path.Combine(Deployment.Data,"selftest.ok"),"mode=free;startup=stable;root="+Deployment.Root);
+                return 0;
+            }
+#endif
+#endif
+        }catch(Exception e){Console.Error.WriteLine(e.Message);if(args.Length==0)MessageBox.Show(e.Message,"操作未完成");return 1;}
+#if !UNINSTALLER
         CoInitializeEx(IntPtr.Zero,2);
         if(args.Length>0)
         {
@@ -131,7 +154,9 @@ internal static partial class Program
             catch(Exception e){Console.Error.WriteLine(e.Message);return 1;}
         }
         Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);
-        var form=new Form {Text="原生开始菜单 · 网格布局 v3.3.2（实验版）",Width=640,Height=500,StartPosition=FormStartPosition.CenterScreen,FormBorderStyle=FormBorderStyle.FixedDialog,MaximizeBox=false};
+        EnsureSettings();
+        if(StartupEnabled())Deployment.StartDetached(Application.ExecutablePath,"/autostart");
+        var form=new Form {Text="原生开始菜单 · 网格布局 v3.4（实验版）",Width=640,Height=555,StartPosition=FormStartPosition.CenterScreen,FormBorderStyle=FormBorderStyle.FixedDialog,MaximizeBox=false};
         var info=new Label {Left=24,Top=20,Width=575,Height=70,Text="适配 Windows 11 25H2 26200.7840\r\n图标吸附到格子，允许留空、不自动补位。\r\n应用重叠建文件夹；仅剩一个成员时自动解散，成员留在原格子。"};
         form.Controls.Add(info);
         var output=new TextBox {Left=24,Top=218,Width=575,Height=149,Multiline=true,ReadOnly=true,ScrollBars=ScrollBars.Vertical};
@@ -151,6 +176,9 @@ internal static partial class Program
             button.Click+=(s,e)=> {try {output.Text=Run(action);}catch(Exception ex){output.Text=ex.Message;}};form.Controls.Add(button);
         }
         var status=new Label {Left=24,Top=384,Width=575,Height=55};form.Controls.Add(status);
+        var uninstall=new Button {Left=24,Top=447,Width=190,Height=35,Text="卸载并清除软件数据"};
+        uninstall.Click+=(s,e)=>{try{if(Deployment.Uninstall(false)==0)form.Close();}catch(Exception ex){output.Text=ex.Message;}};form.Controls.Add(uninstall);
+        form.Controls.Add(new Label {Left=230,Top=449,Width=365,Height=42,Text="安装包可以移动或删除。\r\n软件和布局保存在当前用户的固定目录。"});
         var timer=new System.Windows.Forms.Timer {Interval=800};timer.Tick+=(s,e)=> {
             string value=Read("Runtime","Status","未加载");
             switch(value) {
@@ -172,5 +200,6 @@ internal static partial class Program
             bool enabled=StartupEnabled();if(startup.Checked!=enabled){syncingStartup=true;startup.Checked=enabled;syncingStartup=false;}
         };timer.Start();
         Application.Run(form);return 0;
+#endif
     }
 }

@@ -1,13 +1,13 @@
-# Local binaries are distributed as release assets.
 *.exe
 *.dll
+*.msi
 *.pdb
 *.obj
 *.o
 *.log
 *.dmp
+msi-build-*/
 work/
 build/
-# Keep the clean example configuration, but never commit personal state backups.
 layout-*.ini
 布局备份*.ini

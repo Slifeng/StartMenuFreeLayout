@@ -4,6 +4,7 @@
 #define NOMINMAX
 #include <windows.h>
 #include <shobjidl.h>
+#include <shlobj.h>
 #include <xamlom.h>
 #ifdef GetCurrentTime
 #undef GetCurrentTime
@@ -51,7 +52,14 @@ HMODULE g_module{};
 std::wstring g_dir;
 std::mutex g_logMutex;
 
-std::wstring IniPath() { return g_dir + L"\\layout.ini"; }
+std::wstring DataDir() {
+    // Called after attach, never from DllMain or while the loader lock is held.
+    static std::wstring directory=[] {
+        PWSTR path{};winrt::check_hresult(SHGetKnownFolderPath(FOLDERID_LocalAppData,0,nullptr,&path));
+        std::wstring result(path);CoTaskMemFree(path);return result+L"\\StartMenuFreeLayout\\Data";
+    }();return directory;
+}
+std::wstring IniPath() { return DataDir() + L"\\layout.ini"; }
 void Log(const std::wstring& message) noexcept {
     try {
         std::lock_guard lock(g_logMutex);
@@ -62,7 +70,7 @@ void Log(const std::wstring& message) noexcept {
         int n = WideCharToMultiByte(CP_UTF8,0,s.data(),int(s.size()),nullptr,0,nullptr,nullptr);
         std::string bytes(n,'\0');
         WideCharToMultiByte(CP_UTF8,0,s.data(),int(s.size()),bytes.data(),n,nullptr,nullptr);
-        HANDLE f = CreateFileW((g_dir+L"\\extension.log").c_str(),FILE_APPEND_DATA,
+        HANDLE f = CreateFileW((DataDir()+L"\\extension.log").c_str(),FILE_APPEND_DATA,
             FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,nullptr,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,nullptr);
         if (f != INVALID_HANDLE_VALUE) { DWORD written{}; WriteFile(f,bytes.data(),DWORD(bytes.size()),&written,nullptr); CloseHandle(f); }
     } catch (...) {}

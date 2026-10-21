@@ -10,7 +10,7 @@ using Microsoft.Win32;
 internal static partial class Program
 {
     const string StartupKey=@"Software\Microsoft\Windows\CurrentVersion\Run";
-    const string StartupName="StartMenuFreeLayout";
+    const string StartupName=Deployment.Product;
     static string StartupCommand {get{return "\""+Application.ExecutablePath+"\" /autostart";}}
     static string LastMode()
     {
@@ -21,22 +21,22 @@ internal static partial class Program
     }
     static bool StartupEnabled()
     {
-        using(var key=Registry.CurrentUser.OpenSubKey(StartupKey))
+        using(var key=Deployment.UserRegistry.OpenSubKey(StartupKey))
             return key!=null&&String.Equals(Convert.ToString(key.GetValue(StartupName)),StartupCommand,StringComparison.OrdinalIgnoreCase);
     }
     static void StartupLog(string message)
     {
-        try {File.AppendAllText(Path.Combine(Dir,"startup.log"),DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ")+message+Environment.NewLine,Encoding.UTF8);}catch{}
+        try {File.AppendAllText(Path.Combine(Deployment.Data,"startup.log"),DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ")+message+Environment.NewLine,Encoding.UTF8);}catch{}
     }
     static void SetStartup(bool enabled)
     {
-        using(var key=Registry.CurrentUser.CreateSubKey(StartupKey)) {
+        using(var key=Deployment.UserRegistry.CreateSubKey(StartupKey)) {
             if(enabled)key.SetValue(StartupName,StartupCommand,RegistryValueKind.String);
             else if(String.Equals(Convert.ToString(key.GetValue(StartupName)),StartupCommand,StringComparison.OrdinalIgnoreCase))key.DeleteValue(StartupName,false);
         }
         Write("Settings","AutoStart",enabled?"1":"0");
         StartupLog(enabled?"Autostart enabled":"Autostart disabled");
-        if(enabled)Process.Start(new ProcessStartInfo(Application.ExecutablePath,"/autostart") {UseShellExecute=false,CreateNoWindow=true,WindowStyle=ProcessWindowStyle.Hidden});
+        if(enabled)Deployment.StartDetached(Application.ExecutablePath,"/autostart");
     }
     static string ApplyMode(string mode,bool remember)
     {
@@ -46,7 +46,13 @@ internal static partial class Program
             if(remember)Write("Settings","LastMode",mode);
             return "已还原系统布局；下次登录仍保留系统布局。";
         }
-        using(var target=GetTarget()) {
+#if LIFECYCLE_TEST
+        Write("Settings","EditMode",ModePolicy.Input(mode).ToString());Write("Settings","Mode","enable");if(remember)Write("Settings","LastMode",mode);return "test-mode:"+mode;
+#else
+        Deployment.PrepareHostUpgrade();
+        Process ready=null;for(int i=0;i<30&&ready==null;i++){try{ready=GetTarget();}catch{Thread.Sleep(300);}}
+        if(ready==null)throw new Exception("开始菜单正在重启，请稍后重试。");
+        using(var target=ready) {
             string version=Validate(target);
             Write("Settings","EditMode",ModePolicy.Input(mode).ToString());
             Write("Runtime","Status","attaching");Write("Settings","Mode","enable");
@@ -54,11 +60,12 @@ internal static partial class Program
             if(remember)Write("Settings","LastMode",mode);
             return version+"\r\n当前："+ModePolicy.Name(mode)+"。\r\n模式和格子位置已保存，下次登录按此恢复。";
         }
+#endif
     }
     static int RunAutoStart()
     {
         bool created;
-        using(var mutex=new Mutex(true,@"Local\StartMenuFreeLayout.AutoStart",out created)) {
+        using(var mutex=new Mutex(true,@"Local\"+Deployment.Product+".AutoStart",out created)) {
             if(!created)return 0;
             try {
                 if(!StartupEnabled())return 0;
