@@ -8,7 +8,8 @@ if (-not $Toolchain -or -not $WinrtHeaders -or -not $SdkHeaders) {
     throw '请指定便携 llvm-mingw 根目录、C++/WinRT 投影头文件目录，以及包含 xamlom.h 的 SDK 目录。'
 }
 $taskCompiler=Join-Path $Toolchain 'bin\x86_64-w64-mingw32-clang++.exe'
-$taskArguments=@('-std=c++20','-O2','-shared','-static','-fms-extensions','-DUNICODE','-D_UNICODE','-DWINVER=0x0A00','-D_WIN32_WINNT=0x0A00',"-I$WinrtHeaders","-I$SdkHeaders",(Join-Path $PSScriptRoot 'FreeLayout.cpp'),(Join-Path $PSScriptRoot 'FreeLayout.def'),'-o',(Join-Path $PSScriptRoot 'FreeLayout.dll'),'-lole32','-loleaut32','-luuid','-lruntimeobject','-lkernel32','-luser32','-lshell32','-Wl,--exclude-all-symbols')
+# Map compiler source locations to generic names; do not embed build-machine paths.
+$taskArguments=@("-ffile-prefix-map=$PSScriptRoot=.","-ffile-prefix-map=$WinrtHeaders=winrt-headers","-ffile-prefix-map=$Toolchain=toolchain","-ffile-prefix-map=$SdkHeaders=sdk-headers",'-std=c++20','-O2','-shared','-static','-fms-extensions','-DUNICODE','-D_UNICODE','-DWINVER=0x0A00','-D_WIN32_WINNT=0x0A00',"-I$WinrtHeaders","-I$SdkHeaders",(Join-Path $PSScriptRoot 'FreeLayout.cpp'),(Join-Path $PSScriptRoot 'FreeLayout.def'),'-o',(Join-Path $PSScriptRoot 'FreeLayout.dll'),'-lole32','-loleaut32','-luuid','-lruntimeobject','-lkernel32','-luser32','-lshell32','-Wl,--exclude-all-symbols')
 & $taskCompiler @taskArguments
 if ($LASTEXITCODE -ne 0) { throw '原生扩展编译失败。' }
 $taskCsc=Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'

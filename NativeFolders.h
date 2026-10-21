@@ -4,7 +4,7 @@
 #include <vector>
 #include <winrt/Windows.Foundation.h>
 // Private WinRT ABI verified against Microsoft's matching public PDB:
-// StartMenu.dll 2125.34600.10.0, PDB 3079FE09E69045FAB91ED37D9837AD8A1.
+// Native ABI is pinned to the component fingerprint verified by the launcher.
 // Use QueryInterface and COM ABI only; never call implementation addresses.
 namespace nativefolders {
 namespace wf=winrt::Windows::Foundation;

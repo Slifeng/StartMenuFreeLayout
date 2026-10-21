@@ -13,7 +13,7 @@ internal static partial class Program
 {
     static readonly string Dir=AppDomain.CurrentDomain.BaseDirectory;
     static readonly string Ini=Deployment.Config;
-    const string ExpectedVersion="10.0.26100.7309";
+    const string ExpectedPlatformFingerprint="D400AD6538382C747BB5170D13B0C7613255BF2B61608896AC7B9F05D07D3CDB";
     [DllImport("kernel32.dll",CharSet=CharSet.Unicode,SetLastError=true)]
     static extern IntPtr LoadLibraryEx(string file,IntPtr reserved,uint flags);
     [DllImport("kernel32.dll",CharSet=CharSet.Ansi,SetLastError=true)]
@@ -54,9 +54,12 @@ internal static partial class Program
         {
             string build=Convert.ToString(k.GetValue("CurrentBuild"));int ubr=Convert.ToInt32(k.GetValue("UBR"));
             string version=HostVersion(p);
-            string result="Windows 11 "+build+"."+ubr+" / 开始菜单 "+version+" / x64";
-            if(IntPtr.Size!=8 || build!="26200" || ubr!=7840 || version!=ExpectedVersion)
-                throw new Exception("当前版本不在此实验版本的适配范围，已停止加载。\r\n"+result+"\r\n目标：26200.7840 / "+ExpectedVersion);
+            string result="Windows 原生开始菜单 / x64";
+            string platform=build+"|"+ubr.ToString(System.Globalization.CultureInfo.InvariantCulture)+"|"+version;
+            string fingerprint;
+            using(var sha=System.Security.Cryptography.SHA256.Create())fingerprint=BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(platform))).Replace("-","");
+            if(IntPtr.Size!=8 || fingerprint!=ExpectedPlatformFingerprint)
+                throw new Exception("当前系统或开始菜单组件不在此实验版本的适配范围，已停止加载。");
             string expected=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows),@"SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe");
             if(!String.Equals(p.MainModule.FileName,expected,StringComparison.OrdinalIgnoreCase))
                 throw new Exception("开始菜单进程路径与系统组件路径不符，已停止加载。");
@@ -156,8 +159,8 @@ internal static partial class Program
         Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);
         EnsureSettings();
         if(StartupEnabled())Deployment.StartDetached(Application.ExecutablePath,"/autostart");
-        var form=new Form {Text="原生开始菜单 · 网格布局 v3.4（实验版）",Width=640,Height=555,StartPosition=FormStartPosition.CenterScreen,FormBorderStyle=FormBorderStyle.FixedDialog,MaximizeBox=false};
-        var info=new Label {Left=24,Top=20,Width=575,Height=70,Text="适配 Windows 11 25H2 26200.7840\r\n图标吸附到格子，允许留空、不自动补位。\r\n应用重叠建文件夹；仅剩一个成员时自动解散，成员留在原格子。"};
+        var form=new Form {Text="原生开始菜单 · 网格布局 v3.4（方向键修复版）",Width=640,Height=555,StartPosition=FormStartPosition.CenterScreen,FormBorderStyle=FormBorderStyle.FixedDialog,MaximizeBox=false};
+        var info=new Label {Left=24,Top=20,Width=575,Height=70,Text="启动时自动检查兼容性\r\n图标吸附到格子，允许留空、不自动补位。\r\n应用重叠建文件夹；仅剩一个成员时自动解散，成员留在原格子。"};
         form.Controls.Add(info);
         var output=new TextBox {Left=24,Top=218,Width=575,Height=149,Multiline=true,ReadOnly=true,ScrollBars=ScrollBars.Vertical};
         form.Controls.Add(output);

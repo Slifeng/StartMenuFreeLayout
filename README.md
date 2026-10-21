@@ -1,12 +1,22 @@
-# StartMenuFreeLayout v3.4.0
+# StartMenuFreeLayout v3.4.0（方向键修复版）
 
 让 Windows 11 原生开始菜单的固定图标像桌面一样按格子自由摆放。默认 8 列 × 7 行，可留空位；单击启动、直接拖动同时可用，不替换系统开始菜单。
 
-## 下载最新版
+## 下载
 
-[下载 v3.4.0 可运行压缩包](https://github.com/Slifeng/StartMenuFreeLayout/raw/refs/heads/main/dist/StartMenuFreeLayout-v3.4.0-win-x64-8x7.zip) · [版本发布页](https://github.com/Slifeng/StartMenuFreeLayout/releases) · [SHA256 校验](dist/SHA256SUMS.txt)
+[下载方向键修复版（含安装包和源码）](https://github.com/Slifeng/StartMenuFreeLayout/raw/refs/tags/v3.4.0-keyboard.1/dist/StartMenuFreeLayout-v3.4.0-keyboard.1-win-x64-8x7.zip) · [版本发布页](https://github.com/Slifeng/StartMenuFreeLayout/releases/tag/v3.4.0-keyboard.1)
 
-压缩包包含 MSI 安装包、可移动启动器、卸载程序、源码和使用说明。GitHub 自动生成的 Source code 压缩包仅含仓库文件；实际安装请使用上述可运行压缩包。
+## 本次修复：方向键跟随自由布局
+
+自由布局启用时，上下左右键根据当前格子位置移动焦点：优先同列或同行、跳过空格；没有对齐项时选择该方向附近图标；到边界停留，不按系统原始顺序绕行。Enter、空格、Tab、Esc、带 Ctrl/Shift/Alt 的组合键及文件夹内部导航继续使用系统行为。方向键只改变焦点，不改变图标位置或系统固定顺序。
+
+这是 v3.4.0 的键盘修复包，安装路径与产品版本沿用 v3.4.0，适配范围不变。首次安装双击 MSI；已安装 v3.4.0 时，先关闭控制窗口及本软件的后台程序，再执行 Windows Installer 维护更新：
+
+```powershell
+msiexec /i "StartMenuFreeLayout-v3.4.0-x64.msi" REINSTALL=ALL REINSTALLMODE=vamus
+```
+
+如果提示 DLL 被开始菜单占用，请先使用程序还原系统布局，并注销后重新登录再维护更新。更新保留已有数据；运行移动启动器或开始菜单控制程序，再选择原来的模式。
 
 ## v3.4 修复
 
@@ -66,15 +76,15 @@ msiexec /i "StartMenuFreeLayout-v3.4.0-x64.msi" IMPORTCONFIG="D:\备份\layout.i
 
 ## 适配范围
 
-实验性精确适配：Windows 11 专业版 25H2 **26200.7840 x64**；`StartMenuExperienceHost.exe` **10.0.26100.7309**；`StartMenu.dll` **2125.34600.10.0**。
+适用于通过程序兼容性检查的 Windows 11 x64 环境。当前为实验性适配，并不支持所有系统和开始菜单组件。
 
-加载前核对版本、进程路径及系统组件 SHA256。不匹配会拒绝加载；Windows 更新后可能需要重新适配。
+加载前核对平台指纹、进程路径及系统组件 SHA256。不匹配会拒绝加载；Windows 更新后可能需要重新适配。
 
-列数按固定区宽度计算，已验证设备为 8 列；`GridRows=7` 限制为 7 行。显示设置变化可能改变可用列数。内部仍使用原生 ItemsWrapGrid 和 Translation，键盘导航可能遵循系统内部顺序。未提供隐藏“已固定”标题或独立调整图标大小的功能。
+列数按固定区宽度计算，已验证设备为 8 列；`GridRows=7` 限制为 7 行。显示设置变化可能改变可用列数。内部仍使用原生 ItemsWrapGrid 和 Translation；自由布局的方向键已改为按当前格子导航。未提供隐藏“已固定”标题或独立调整图标大小的功能。
 
 ## 源码与构建
 
-`FreeLayout.cpp` 处理原生菜单布局及手势；`NativeFolders.h` 为精确匹配的文件夹接口；`Launcher.cs`、`Startup.cs` 管理模式与可选自启动；`Deployment.cs` 处理迁移、所有权核对和卸载准备；`package-msi.ps1` 使用 Windows Installer COM 和系统 MakeCab 构建安装包；`StartInstalled.cs` 是可移动启动器。
+`FreeLayout.cpp` 处理原生菜单布局、手势和焦点事件；`SpatialNavigation.h` 按当前格子计算方向键目标；`NativeFolders.h` 为精确匹配的文件夹接口；`Launcher.cs`、`Startup.cs` 管理模式与可选自启动；`Deployment.cs` 处理迁移、所有权核对和卸载准备；`package-msi.ps1` 使用 Windows Installer COM 和系统 MakeCab 构建安装包；`StartInstalled.cs` 是可移动启动器。
 
 依赖：LLVM-MinGW x64 UCRT、C++/WinRT 投影头文件、包含 `xamlom.h` 的 Windows SDK 头文件、Windows 自带 .NET Framework 4.x x64 C# 编译器。
 

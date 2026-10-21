@@ -1,5 +1,5 @@
 // Experimental native Start menu extension. MIT license; see LICENSE.txt.
-// Target verified by launcher: Windows 11 26200.7840 / Start host 26100.7309.
+// Target component compatibility is verified by the launcher before attach.
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
@@ -41,6 +41,7 @@ __CRT_UUID_DECL(IVisualTreeServiceCallback2,0xBAD9EB88,0xAE77,0x4397,0xB9,0x48,0
 #include "GridLayout.h"
 #include "PointerGesture.h"
 #include "NativeFolders.h"
+#include "SpatialNavigation.h"
 
 namespace wf = winrt::Windows::Foundation;
 namespace wx = winrt::Windows::UI::Xaml;
@@ -164,6 +165,8 @@ struct Controller:std::enable_shared_from_this<Controller> {
     bool active{},logged{},arranged{},oldDrag{},oldReorder{},oldClick{},oldSwipe{},clickHooked{};
     int inputMode{}; // 0: Ctrl drag, 1: arrange only, 2: click and direct drag
     winrt::event_token clickedToken{};
+    winrt::event_token keyboardToken{};
+    bool keyboardHooked{};
     layout::Grid grid;
     double boardWidth{},boardHeight{};
     std::map<int,wf::Point> initial;
@@ -191,6 +194,46 @@ struct Controller:std::enable_shared_from_this<Controller> {
     std::vector<std::shared_ptr<Item>> Ordered() {
         std::vector<std::shared_ptr<Item>> result;for(auto const& [_,p]:items)if(p->view.get())result.push_back(p);
         std::sort(result.begin(),result.end(),[](auto const& a,auto const& b){return a->index<b->index;});return result;
+    }
+    void Navigate(wi::KeyRoutedEventArgs const& e) {
+        if(!active||e.Handled()||folderPending)return;
+        using Key=winrt::Windows::System::VirtualKey;
+        navigation::Direction direction;
+        switch(e.Key()) {
+        case Key::Left:direction=navigation::Direction::Left;break;
+        case Key::Right:direction=navigation::Direction::Right;break;
+        case Key::Up:direction=navigation::Direction::Up;break;
+        case Key::Down:direction=navigation::Direction::Down;break;
+        default:return; // Enter, Space, Tab and Escape remain native.
+        }
+        if((GetKeyState(VK_CONTROL)|GetKeyState(VK_SHIFT)|GetKeyState(VK_MENU)|GetKeyState(VK_LWIN)|GetKeyState(VK_RWIN))&0x8000)return;
+        for(auto const& [_,p]:items)if(p->gesture.Active())return;
+        auto g=weakGrid.get();if(!g)return;
+        auto focused=wi::FocusManager::GetFocusedElement(g.XamlRoot()).try_as<wx::DependencyObject>();
+        std::shared_ptr<Item> current;
+        // Stop at the nearest item/grid. A folder's inner GridView, editable
+        // folder title or search box must keep its own keyboard behavior.
+        for(auto node=focused;node&&node!=g;node=wm::VisualTreeHelper::GetParent(node)) {
+            if(node.try_as<wc::TextBox>()||node.try_as<wc::RichEditBox>()||node.try_as<wc::PasswordBox>()||node.try_as<wc::GridView>())return;
+            if(auto view=node.try_as<wc::GridViewItem>()) {
+                auto it=items.find(reinterpret_cast<uintptr_t>(winrt::get_abi(view)));
+                if(it==items.end())return;
+                current=it->second;break;
+            }
+        }
+        if(!current||!current->assigned||!grid.Contains(current->cell))return;
+        std::vector<std::shared_ptr<Item>> targets;std::vector<layout::Cell> cells;
+        for(auto const& p:Ordered())if(p->assigned)if(auto view=p->view.get();view&&view.Visibility()==wx::Visibility::Visible&&view.IsEnabled()&&view.IsTabStop()) {
+            targets.push_back(p);cells.push_back(p->cell);
+        }
+        // PreviewKeyDown tunnels before native ItemsWrapGrid navigation.
+        // Consume at an edge too, so it cannot wrap using the original slots.
+        e.Handled(true);
+        for(auto i:navigation::Candidates(grid,current->cell,direction,cells))if(auto view=targets[i]->view.get();view&&view.Focus(wx::FocusState::Keyboard)) {
+            Log(L"Spatial focus: "+current->label+L" -> "+targets[i]->label);
+            Runtime(L"KeyboardFocus",std::to_wstring(targets[i]->cell.column)+L","+std::to_wstring(targets[i]->cell.row));
+            return;
+        }
     }
     void DumpGeometry(wc::GridView const& g) {
         Log(L"--- Native layout geometry ---");
@@ -530,6 +573,7 @@ struct Controller:std::enable_shared_from_this<Controller> {
             }
             spaces.clear();surface=nullptr;arranged=false;folderPending=false;placements.clear();persisted.clear();
             if(auto g=weakGrid.get()){
+                if(keyboardHooked){g.PreviewKeyDown(keyboardToken);keyboardHooked=false;}
                 if(clickHooked){g.ItemClick(clickedToken);clickHooked=false;}
                 g.CanDragItems(oldDrag);g.CanReorderItems(oldReorder);g.IsSwipeEnabled(oldSwipe);g.IsItemClickEnabled(oldClick);
             }
@@ -543,12 +587,14 @@ struct Controller:std::enable_shared_from_this<Controller> {
         SuppressLayoutTransitions(transitions,g,wc::ItemsControl::ItemContainerTransitionsProperty());
         CaptureSpaces(g);active=true;surface=g;inputMode=std::clamp(Number(L"EditMode",0),0,2);SyncInput(g);ApplySpace(g);
         std::weak_ptr<Controller> self=shared_from_this();
+        keyboardToken=g.PreviewKeyDown([self](auto const&,wi::KeyRoutedEventArgs const& e){try{if(auto c=self.lock())c->Navigate(e);}catch(...){Error(L"Spatial keyboard navigation");}});keyboardHooked=true;
         clickedToken=g.ItemClick([self](auto const&,auto const&){if(auto c=self.lock();c&&c->active)Log(L"Native ItemClick dispatched");});clickHooked=true;
         layoutToken=g.LayoutUpdated([self](auto const&,auto const&){if(auto c=self.lock())c->FastLayout();});layoutHooked=true;
         renderToken=wm::CompositionTarget::Rendering([self](auto const&,auto const&){if(auto c=self.lock())c->FastLayout();});renderHooked=true;
         Log(L"Native grid layout enabled; cell="+std::to_wstring(grid.width)+L","+std::to_wstring(grid.height));
         Runtime(L"FolderApi",FolderViewModel()?L"ready":L"unavailable");
         Runtime(L"LayoutTransitions",L"suppressed");
+        Runtime(L"KeyboardNavigation",L"spatial");
     }
     void Check(wc::GridView const& g) {
         bool within=true,aligned=true;std::vector<layout::Cell> occupied;
