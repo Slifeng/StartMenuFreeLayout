@@ -25,6 +25,11 @@ function Row([string]$table,[object[]]$values){
  $v=@($values|ForEach-Object {if($null -eq $_){'NULL'}elseif($_ -is [int]){[string]$_}else{Q ([string]$_)}})
  Sql ('INSERT INTO `'+$table+'` ('+$columnCache[$table]+') VALUES ('+($v -join ',')+')')
 }
+Sql 'CREATE TABLE `Icon` (`Name` CHAR(72) NOT NULL, `Data` OBJECT NOT NULL PRIMARY KEY `Name`)'
+$iconPath=Join-Path $PSScriptRoot 'assets\AppIcon.ico'
+$iconView=$db.OpenView('INSERT INTO `Icon` (`Name`,`Data`) VALUES (?,?)')
+$iconRecord=$installer.CreateRecord(2);$iconRecord.StringData(1)='AppIcon.ico';$iconRecord.SetStream(2,$iconPath)
+$iconView.Execute($iconRecord);$iconView.Close()
 Sql 'CREATE TABLE `Property` (`Property` CHAR(72) NOT NULL, `Value` CHAR(0) LOCALIZABLE PRIMARY KEY `Property`)'
 Sql 'CREATE TABLE `Directory` (`Directory` CHAR(72) NOT NULL, `Directory_Parent` CHAR(72), `DefaultDir` CHAR(255) NOT NULL LOCALIZABLE PRIMARY KEY `Directory`)'
 Sql 'CREATE TABLE `Component` (`Component` CHAR(72) NOT NULL, `ComponentId` CHAR(38), `Directory_` CHAR(72) NOT NULL, `Attributes` SHORT NOT NULL, `Condition` CHAR(255), `KeyPath` CHAR(72) PRIMARY KEY `Component`)'
@@ -37,7 +42,7 @@ Sql 'CREATE TABLE `InstallExecuteSequence` (`Action` CHAR(72) NOT NULL, `Conditi
 Sql 'CREATE TABLE `RemoveFile` (`FileKey` CHAR(72) NOT NULL, `Component_` CHAR(72) NOT NULL, `FileName` CHAR(255) LOCALIZABLE, `DirProperty` CHAR(72) NOT NULL, `InstallMode` SHORT NOT NULL PRIMARY KEY `FileKey`)'
 Sql 'CREATE TABLE `Shortcut` (`Shortcut` CHAR(72) NOT NULL, `Directory_` CHAR(72) NOT NULL, `Name` CHAR(128) NOT NULL LOCALIZABLE, `Component_` CHAR(72) NOT NULL, `Target` CHAR(255), `Arguments` CHAR(255), `Description` CHAR(255) LOCALIZABLE, `Hotkey` SHORT, `Icon_` CHAR(72), `IconIndex` SHORT, `ShowCmd` SHORT, `WkDir` CHAR(72) PRIMARY KEY `Shortcut`)'
 Sql 'CREATE TABLE `Registry` (`Registry` CHAR(72) NOT NULL, `Root` SHORT NOT NULL, `Key` CHAR(255) NOT NULL LOCALIZABLE, `Name` CHAR(255) LOCALIZABLE, `Value` CHAR(0) LOCALIZABLE, `Component_` CHAR(72) NOT NULL PRIMARY KEY `Registry`)'
-foreach($pair in @(@('ProductCode',$code),@('UpgradeCode','{23DC55D9-79B1-43BE-8ED2-5426AD99ABEC}'),@('ProductName',$product),@('ProductVersion','3.4.0'),@('ProductLanguage','1033'),@('Manufacturer','StartMenuFreeLayout'),@('INSTALLLEVEL','1'),@('ARPHELPLINK','https://github.com/12365adwd/StartMenuFreeLayout'),@('ARPNOMODIFY','1'),@('ARPNOREPAIR','1'),@('REBOOT','ReallySuppress'))){Row Property $pair}
+foreach($pair in @(@('ProductCode',$code),@('UpgradeCode','{23DC55D9-79B1-43BE-8ED2-5426AD99ABEC}'),@('ProductName',$product),@('ProductVersion','3.4.0'),@('ProductLanguage','1033'),@('Manufacturer','StartMenuFreeLayout'),@('INSTALLLEVEL','1'),@('ARPHELPLINK','https://github.com/12365adwd/StartMenuFreeLayout'),@('ARPPRODUCTICON','AppIcon.ico'),@('ARPNOMODIFY','1'),@('ARPNOREPAIR','1'),@('REBOOT','ReallySuppress'))){Row Property $pair}
 Row Directory @('TARGETDIR',$null,'SourceDir');Row Directory @('LocalAppDataFolder','TARGETDIR','.');Row Directory @('INSTALLROOT','LocalAppDataFolder',$product)
 Row Directory @('APPROOT','INSTALLROOT','App');Row Directory @('APPDIR','APPROOT','3.4.0');Row Directory @('ProgramMenuFolder','TARGETDIR','.')
 Row Feature @('Main',$null,'StartMenuFreeLayout',$null,1,1,'INSTALLROOT',0)
@@ -61,7 +66,7 @@ Row Registry @('Version',1,('Software\'+$product),'Version','3.4.0','c0')
 Row CustomAction @('RegisterInstall',18,'f0','/register-install "[IMPORTCONFIG]" "[UserSID]" [CLIENTPROCESSID]')
 Row CustomAction @('PrepareUninstall',18,'f0','/prepare-uninstall "[UserSID]" [CLIENTPROCESSID]')
 Row CustomAction @('LaunchControl',18,'f0','/launch-control "[UserSID]" [CLIENTPROCESSID]')
-Row Shortcut @('ControlShortcut','ProgramMenuFolder',($product+'.lnk'),'c0','[#f0]',$null,'StartMenuFreeLayout',$null,$null,$null,1,'APPDIR')
+Row Shortcut @('ControlShortcut','ProgramMenuFolder',($product+'.lnk'),'c0','[#f0]',$null,'StartMenuFreeLayout',$null,'AppIcon.ico',0,1,'APPDIR')
 Row RemoveFile @('RemoveVersion','c0',$null,'APPDIR',2);Row RemoveFile @('RemoveAppRoot','c0',$null,'APPROOT',2);Row RemoveFile @('RemoveProductRoot','c0',$null,'INSTALLROOT',2)
 $sequence=@(@('CostInitialize',800),@('FileCost',900),@('CostFinalize',1000),@('InstallValidate',1400),@('InstallInitialize',1500),@('ProcessComponents',1600),@('UnpublishFeatures',1800),@('RemoveShortcuts',3200),@('RemoveRegistryValues',3300),@('RemoveFiles',3500),@('RemoveFolders',3600),@('InstallFiles',4000),@('CreateShortcuts',4500),@('WriteRegistryValues',5000),@('RegisterUser',6000),@('RegisterProduct',6100),@('PublishFeatures',6300),@('PublishProduct',6400),@('InstallFinalize',6600))
 foreach($s in $sequence){Row InstallExecuteSequence @($s[0],$null,[int]$s[1])}

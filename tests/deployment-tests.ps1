@@ -4,7 +4,7 @@ $TestBase=[IO.Path]::GetFullPath($TestBase)
 New-Item -ItemType Directory -Path $TestBase -Force|Out-Null
 $source=Split-Path $PSScriptRoot -Parent
 $csc=Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
-$sources=@('Launcher.cs','Startup.cs','ModePolicy.cs','Deployment.cs')|ForEach-Object{Join-Path $source $_}
+$sources=@('Launcher.cs','Startup.cs','ModePolicy.cs','Deployment.cs','ControlWindow.cs')|ForEach-Object{Join-Path $source $_}
 foreach($name in @('StartMenuFreeLayout','Uninstall')) {
  $defines='LIFECYCLE_TEST';if($name -eq 'Uninstall'){$defines+=',UNINSTALLER'}
  & $csc /nologo /target:winexe /platform:x64 "/define:$defines" "/out:$TestBase\$name.exe" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll @sources

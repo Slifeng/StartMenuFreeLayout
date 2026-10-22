@@ -1,16 +1,32 @@
-# StartMenuFreeLayout v3.4.0（方向键修复版）
+# StartMenuFreeLayout v3.4.0-ui.2
+
+<img src="assets/AppIcon.png" alt="StartMenuFreeLayout 图标" width="80">
 
 让 Windows 11 原生开始菜单的固定图标像桌面一样按格子自由摆放。默认 8 列 × 7 行，可留空位；单击启动、直接拖动同时可用，不替换系统开始菜单。
 
-## 下载
+## 下载最新版
 
-[下载方向键修复版（含安装包和源码）](https://github.com/Slifeng/StartMenuFreeLayout/raw/refs/tags/v3.4.0-keyboard.2/dist/StartMenuFreeLayout-v3.4.0-keyboard.2-win-x64-8x7.zip) · [版本发布页](https://github.com/Slifeng/StartMenuFreeLayout/releases/tag/v3.4.0-keyboard.2)
+[下载可运行 ZIP（含源码）](https://github.com/Slifeng/StartMenuFreeLayout/raw/refs/tags/v3.4.0-ui.2/dist/StartMenuFreeLayout-v3.4.0-ui.2-win-x64-8x7.zip) · [版本发布页](https://github.com/Slifeng/StartMenuFreeLayout/releases/tag/v3.4.0-ui.2) · [SHA256 校验](dist/SHA256SUMS.txt)
+
+压缩包包含 MSI 安装包、可移动启动器、卸载程序、源码、图标资源及使用说明。
+
+## 应用图标更新
+
+应用图标采用蓝色八格标志，透明底，包含 16—256 像素的多尺寸资源。控制程序、可移动启动器、窗口与任务栏、开始菜单快捷方式和安装登记统一使用该图标。源文件及图标构建脚本位于 `assets/` 和 `build-icon.ps1`。
+
+## 主界面更新
+
+主控制窗口采用：浅色圆角卡片、蓝色模式选中提示、四种模式的两列布局、自启动开关、运行状态栏及可折叠运行信息。右侧布局示意区已移除。
+
+保留原有模式切换、登录自启动、原生文件夹、方向键导航及卸载机制。控件支持 Tab 定位、Enter/空格操作；窗口按显示缩放绘制，屏幕空间不足时允许滚动查看。
+
+首次安装使用附带 MSI；已有安装按下述维护更新方式处理。该更新沿用原安装产品版本和固定路径。
 
 ## 本次修复：方向键跟随自由布局
 
 自由布局启用时，上下左右键根据当前格子位置移动焦点：优先同列或同行、跳过空格；没有对齐项时选择该方向附近图标；到边界停留，不按系统原始顺序绕行。Enter、空格、Tab、Esc、带 Ctrl/Shift/Alt 的组合键及文件夹内部导航继续使用系统行为。方向键只改变焦点，不改变图标位置或系统固定顺序。
 
-这是 v3.4.0 的键盘修复包，安装路径与产品版本沿用 v3.4.0，适配范围不变。首次安装双击 MSI；已安装 v3.4.0 时，先关闭控制窗口及本软件的后台程序，再执行 Windows Installer 维护更新：
+这是基于 v3.4.0 方向键修复版的界面更新，安装路径与产品版本沿用 v3.4.0，适配范围不变。首次安装双击 MSI；已安装 v3.4.0 时，先关闭控制窗口及本软件的后台程序，再执行 Windows Installer 维护更新：
 
 ```powershell
 msiexec /i "StartMenuFreeLayout-v3.4.0-x64.msi" REINSTALL=ALL REINSTALLMODE=vamus
@@ -22,7 +38,7 @@ msiexec /i "StartMenuFreeLayout-v3.4.0-x64.msi" REINSTALL=ALL REINSTALLMODE=vamu
 
 旧版在解压目录加载 DLL，并把自启动写成该目录的绝对路径。移动文件夹后，旧地址失效；已加载的 DLL 还可能被开始菜单占用。
 
-新版改用 Windows 标准 MSI 安装：运行组件和数据保存到当前用户的固定目录，安装包及附带启动器可以任意移动。增加系统“已安装的应用”卸载入口，以及控制窗口的“卸载并清除软件数据”按钮。卸载由 Windows Installer 收尾，不使用 PowerShell、JScript、自删除脚本或临时清理程序。
+新版改用 Windows 标准 MSI 安装：运行组件和数据保存到当前用户的固定目录，安装包及附带启动器可以任意移动。增加系统“已安装的应用”卸载入口，以及控制窗口的“卸载并清除数据”按钮。卸载由 Windows Installer 收尾，不使用 PowerShell、JScript、自删除脚本或临时清理程序。
 
 ## 安装和使用
 
@@ -50,7 +66,7 @@ msiexec /i "StartMenuFreeLayout-v3.4.0-x64.msi" REINSTALL=ALL REINSTALLMODE=vamu
 - 自启动：当前用户 `Software\Microsoft\Windows\CurrentVersion\Run` 中的 `StartMenuFreeLayout` 值。
 - 私有登记：当前用户 `Software\StartMenuFreeLayout`，以及 Windows Installer 管理的产品卸载登记。
 
-卸载方法任选一种：控制窗口点击“卸载并清除软件数据”；Windows 设置 → 应用 → 已安装的应用 → StartMenuFreeLayout → 卸载；或运行随包的 `卸载.exe`。
+卸载方法任选一种：控制窗口点击“卸载并清除数据”；Windows 设置 → 应用 → 已安装的应用 → StartMenuFreeLayout → 卸载；或运行随包的 `卸载.exe`。
 
 卸载会停用自启动、退出本软件的后台程序，释放加载了本软件 DLL 的当前用户开始菜单进程，然后清除运行组件、布局数据、缓存、日志、软件私有注册项及开始菜单中的控制程序快捷方式。开始菜单会由 Windows 重新建立。
 
@@ -84,7 +100,7 @@ msiexec /i "StartMenuFreeLayout-v3.4.0-x64.msi" IMPORTCONFIG="D:\备份\layout.i
 
 ## 源码与构建
 
-`FreeLayout.cpp` 处理原生菜单布局、手势和焦点事件；`SpatialNavigation.h` 按当前格子计算方向键目标；`NativeFolders.h` 为精确匹配的文件夹接口；`Launcher.cs`、`Startup.cs` 管理模式与可选自启动；`Deployment.cs` 处理迁移、所有权核对和卸载准备；`package-msi.ps1` 使用 Windows Installer COM 和系统 MakeCab 构建安装包；`StartInstalled.cs` 是可移动启动器。
+`ControlWindow.cs` 实现主控制窗口及自绘控件；`FreeLayout.cpp` 处理原生菜单布局、手势和焦点事件；`SpatialNavigation.h` 按当前格子计算方向键目标；`NativeFolders.h` 为精确匹配的文件夹接口；`Launcher.cs`、`Startup.cs` 管理模式与可选自启动；`Deployment.cs` 处理迁移、所有权核对和卸载准备；`package-msi.ps1` 使用 Windows Installer COM 和系统 MakeCab 构建安装包；`StartInstalled.cs` 是可移动启动器。
 
 依赖：LLVM-MinGW x64 UCRT、C++/WinRT 投影头文件、包含 `xamlom.h` 的 Windows SDK 头文件、Windows 自带 .NET Framework 4.x x64 C# 编译器。
 

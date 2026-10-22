@@ -159,50 +159,7 @@ internal static partial class Program
         Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);
         EnsureSettings();
         if(StartupEnabled())Deployment.StartDetached(Application.ExecutablePath,"/autostart");
-        var form=new Form {Text="原生开始菜单 · 网格布局 v3.4（方向键修复版）",Width=640,Height=555,StartPosition=FormStartPosition.CenterScreen,FormBorderStyle=FormBorderStyle.FixedDialog,MaximizeBox=false};
-        var info=new Label {Left=24,Top=20,Width=575,Height=70,Text="启动时自动检查兼容性\r\n图标吸附到格子，允许留空、不自动补位。\r\n应用重叠建文件夹；仅剩一个成员时自动解散，成员留在原格子。"};
-        form.Controls.Add(info);
-        var output=new TextBox {Left=24,Top=218,Width=575,Height=149,Multiline=true,ReadOnly=true,ScrollBars=ScrollBars.Vertical};
-        form.Controls.Add(output);
-        form.Controls.Add(new Label {Left=24,Top=153,Width=575,Height=30,Text="自由模式：单击打开，直接拖动。锁定模式：单击打开，Ctrl + 拖动。"});
-        bool syncingStartup=false;
-        var startup=new CheckBox {Left=24,Top=184,Width=575,Text="开机自启动：登录后静默恢复上次模式和图标位置",Checked=StartupEnabled()};
-        startup.CheckedChanged+=(sender,eventArgs)=> {
-            if(syncingStartup)return;
-            try{SetStartup(startup.Checked);output.Text=startup.Checked?"自启动已开启；每次切换模式都会立即保存，下次登录后自动恢复。":"自启动已关闭，当前模式继续生效。";}
-            catch(Exception ex){syncingStartup=true;startup.Checked=StartupEnabled();syncingStartup=false;output.Text=ex.Message;}
-        };form.Controls.Add(startup);
-        string[] texts={"自由拖动＋点击","锁定位置使用","只整理图标","还原系统布局"};string[] actions={"free","locked","edit","restore"};
-        for(int i=0;i<texts.Length;i++)
-        {
-            string action=actions[i];var button=new Button {Left=24+i*146,Top=106,Width=139,Height=38,Text=texts[i]};
-            button.Click+=(s,e)=> {try {output.Text=Run(action);}catch(Exception ex){output.Text=ex.Message;}};form.Controls.Add(button);
-        }
-        var status=new Label {Left=24,Top=384,Width=575,Height=55};form.Controls.Add(status);
-        var uninstall=new Button {Left=24,Top=447,Width=190,Height=35,Text="卸载并清除软件数据"};
-        uninstall.Click+=(s,e)=>{try{if(Deployment.Uninstall(false)==0)form.Close();}catch(Exception ex){output.Text=ex.Message;}};form.Controls.Add(uninstall);
-        form.Controls.Add(new Label {Left=230,Top=449,Width=365,Height=42,Text="安装包可以移动或删除。\r\n软件和布局保存在当前用户的固定目录。"});
-        var timer=new System.Windows.Forms.Timer {Interval=800};timer.Tick+=(s,e)=> {
-            string value=Read("Runtime","Status","未加载");
-            switch(value) {
-                case "active":value="网格布局已启用 · 点击启动应用";break;
-                case "active-free":value="自由模式 · 直接拖动，单击打开";break;
-                case "active-edit":value="网格摆放模式 · 拖动后吸附到格子";break;
-                case "inspected":value="已连接 · 使用系统网格布局";break;
-                case "restored":value="已还原系统布局";break;
-                case "attaching":value="正在连接开始菜单";break;
-                case "waiting-host":value="开始菜单尚未就绪，后台正在等待恢复";break;
-                case "startup-failed":value="自动恢复失败，请查看 startup.log";break;
-                case "waiting-containers":value="请打开一次开始菜单";break;
-                case "error-restored":value="发生错误，已请求还原";break;
-                case "restore-failed":value="还原未完成，请重启电脑恢复";break;
-                case "save-failed":value="位置保存失败，请检查文件夹写入权限";break;
-                case "diagnostics-failed":value="未能连接开始菜单";break;
-            }
-            string grid=Read("Runtime","Grid","");status.Text=value+(grid.Length>0?"　"+grid.Replace("x"," × "):"")+"\r\n已记住："+ModePolicy.Name(LastMode());
-            bool enabled=StartupEnabled();if(startup.Checked!=enabled){syncingStartup=true;startup.Checked=enabled;syncingStartup=false;}
-        };timer.Start();
-        Application.Run(form);return 0;
+        return ShowControlWindow();
 #endif
     }
 }
