@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <cmath>
 namespace input {
 enum class Phase { Idle, Pending, Dragging };

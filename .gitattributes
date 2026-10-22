@@ -1,0 +1,2 @@
+# Keep historical distribution files in Git without nesting them in downloads.
+/dist export-ignore

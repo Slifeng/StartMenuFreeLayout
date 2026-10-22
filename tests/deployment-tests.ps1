@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$TestBase)
+﻿param([Parameter(Mandatory=$true)][string]$TestBase)
 $ErrorActionPreference='Stop'
 $TestBase=[IO.Path]::GetFullPath($TestBase)
 New-Item -ItemType Directory -Path $TestBase -Force|Out-Null
@@ -35,7 +35,7 @@ $msiexec=Join-Path $env:WINDIR 'System32\msiexec.exe'
 $result=Run-Program $msiexec ('/i "'+$package+'" /qn /norestart IMPORTCONFIG="'+$import+'" /L*v "'+(Join-Path $TestBase 'install.log')+'"')
 Assert ($result.Code -eq 0) "MSI install failed: $($result.Code)"
 'PASS: standard per-user MSI installation'
-$installed=Join-Path $root 'App\3.4.0\StartMenuFreeLayout.exe'
+$installed=Join-Path $root 'App\0.0.0\StartMenuFreeLayout.exe'
 Assert (Test-Path -LiteralPath $installed) 'Installed app missing'
 $config=Join-Path $root 'Data\layout.ini'
 $text=[IO.File]::ReadAllText($config)

@@ -1,4 +1,4 @@
-// MIT. Per-user managed deployment; Windows Installer owns file lifecycle.
+﻿// MIT. Per-user managed deployment; Windows Installer owns file lifecycle.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,7 +27,7 @@ public static class Deployment
             InstallerSession=client.SessionId;
         }
     }
-    public const string Version="3.4.0";
+    public const string Version="0.0.0";
     #if LIFECYCLE_TEST
     public const string MsiProductCode="{D6446F23-B73B-4355-A5C9-3B737225E03C}";
 #else

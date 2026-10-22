@@ -1,4 +1,4 @@
-# Generate native multi-size icon resources from the simple SVG mark.
+﻿# Generate native multi-size icon resources from the simple SVG mark.
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.Drawing
 $iconFolder=Join-Path $PSScriptRoot 'assets'

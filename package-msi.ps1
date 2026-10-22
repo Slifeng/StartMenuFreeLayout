@@ -1,4 +1,4 @@
-param([string]$Payload=$PSScriptRoot,[string]$Output=(Join-Path $PSScriptRoot 'StartMenuFreeLayout-v3.4.0-x64.msi'),[switch]$Test)
+﻿param([string]$Payload=$PSScriptRoot,[string]$Output=(Join-Path $PSScriptRoot 'StartMenuFreeLayout-v0.0.0-x64.msi'),[switch]$Test)
 $ErrorActionPreference='Stop'
 $Payload=[IO.Path]::GetFullPath($Payload);$Output=[IO.Path]::GetFullPath($Output)
 $product='StartMenuFreeLayout';$code='{CB6777EC-54F7-4BD5-846A-A9645B219AD2}'
@@ -30,6 +30,9 @@ $iconPath=Join-Path $PSScriptRoot 'assets\AppIcon.ico'
 $iconView=$db.OpenView('INSERT INTO `Icon` (`Name`,`Data`) VALUES (?,?)')
 $iconRecord=$installer.CreateRecord(2);$iconRecord.StringData(1)='AppIcon.ico';$iconRecord.SetStream(2,$iconPath)
 $iconView.Execute($iconRecord);$iconView.Close()
+[Runtime.InteropServices.Marshal]::FinalReleaseComObject($iconRecord)|Out-Null
+[Runtime.InteropServices.Marshal]::FinalReleaseComObject($iconView)|Out-Null
+$iconRecord=$null;$iconView=$null
 Sql 'CREATE TABLE `Property` (`Property` CHAR(72) NOT NULL, `Value` CHAR(0) LOCALIZABLE PRIMARY KEY `Property`)'
 Sql 'CREATE TABLE `Directory` (`Directory` CHAR(72) NOT NULL, `Directory_Parent` CHAR(72), `DefaultDir` CHAR(255) NOT NULL LOCALIZABLE PRIMARY KEY `Directory`)'
 Sql 'CREATE TABLE `Component` (`Component` CHAR(72) NOT NULL, `ComponentId` CHAR(38), `Directory_` CHAR(72) NOT NULL, `Attributes` SHORT NOT NULL, `Condition` CHAR(255), `KeyPath` CHAR(72) PRIMARY KEY `Component`)'
@@ -42,9 +45,9 @@ Sql 'CREATE TABLE `InstallExecuteSequence` (`Action` CHAR(72) NOT NULL, `Conditi
 Sql 'CREATE TABLE `RemoveFile` (`FileKey` CHAR(72) NOT NULL, `Component_` CHAR(72) NOT NULL, `FileName` CHAR(255) LOCALIZABLE, `DirProperty` CHAR(72) NOT NULL, `InstallMode` SHORT NOT NULL PRIMARY KEY `FileKey`)'
 Sql 'CREATE TABLE `Shortcut` (`Shortcut` CHAR(72) NOT NULL, `Directory_` CHAR(72) NOT NULL, `Name` CHAR(128) NOT NULL LOCALIZABLE, `Component_` CHAR(72) NOT NULL, `Target` CHAR(255), `Arguments` CHAR(255), `Description` CHAR(255) LOCALIZABLE, `Hotkey` SHORT, `Icon_` CHAR(72), `IconIndex` SHORT, `ShowCmd` SHORT, `WkDir` CHAR(72) PRIMARY KEY `Shortcut`)'
 Sql 'CREATE TABLE `Registry` (`Registry` CHAR(72) NOT NULL, `Root` SHORT NOT NULL, `Key` CHAR(255) NOT NULL LOCALIZABLE, `Name` CHAR(255) LOCALIZABLE, `Value` CHAR(0) LOCALIZABLE, `Component_` CHAR(72) NOT NULL PRIMARY KEY `Registry`)'
-foreach($pair in @(@('ProductCode',$code),@('UpgradeCode','{23DC55D9-79B1-43BE-8ED2-5426AD99ABEC}'),@('ProductName',$product),@('ProductVersion','3.4.0'),@('ProductLanguage','1033'),@('Manufacturer','StartMenuFreeLayout'),@('INSTALLLEVEL','1'),@('ARPHELPLINK','https://github.com/12365adwd/StartMenuFreeLayout'),@('ARPPRODUCTICON','AppIcon.ico'),@('ARPNOMODIFY','1'),@('ARPNOREPAIR','1'),@('REBOOT','ReallySuppress'))){Row Property $pair}
+foreach($pair in @(@('ProductCode',$code),@('UpgradeCode','{23DC55D9-79B1-43BE-8ED2-5426AD99ABEC}'),@('ProductName',$product),@('ProductVersion','0.0.0'),@('ProductLanguage','1033'),@('Manufacturer','StartMenuFreeLayout'),@('INSTALLLEVEL','1'),@('ARPHELPLINK','https://github.com/Slifeng/StartMenuFreeLayout'),@('ARPPRODUCTICON','AppIcon.ico'),@('ARPNOMODIFY','1'),@('ARPNOREPAIR','1'),@('REBOOT','ReallySuppress'))){Row Property $pair}
 Row Directory @('TARGETDIR',$null,'SourceDir');Row Directory @('LocalAppDataFolder','TARGETDIR','.');Row Directory @('INSTALLROOT','LocalAppDataFolder',$product)
-Row Directory @('APPROOT','INSTALLROOT','App');Row Directory @('APPDIR','APPROOT','3.4.0');Row Directory @('ProgramMenuFolder','TARGETDIR','.')
+Row Directory @('APPROOT','INSTALLROOT','App');Row Directory @('APPDIR','APPROOT','0.0.0');Row Directory @('ProgramMenuFolder','TARGETDIR','.')
 Row Feature @('Main',$null,'StartMenuFreeLayout',$null,1,1,'INSTALLROOT',0)
 for($i=0;$i -lt $files.Count;$i++) {
  $component='c'+$i;$file='f'+$i
@@ -60,7 +63,7 @@ Row Media @(1,4,$null,'#payload.cab',$null,$null)
 Row Registry @('OwnProductKey',1,('Software\'+$product),'*',$null,'c0')
 Row Registry @('InstallRoot',1,('Software\'+$product),'InstallRoot','[INSTALLROOT]','c0')
 Row Registry @('CurrentExe',1,('Software\'+$product),'CurrentExe','[#f0]','c0')
-Row Registry @('Version',1,('Software\'+$product),'Version','3.4.0','c0')
+Row Registry @('Version',1,('Software\'+$product),'Version','0.0.0','c0')
 # The controller preserves optional startup on upgrade, then removes exactly its
 # own value in PrepareUninstall. Never author the shared Run key.
 Row CustomAction @('RegisterInstall',18,'f0','/register-install "[IMPORTCONFIG]" "[UserSID]" [CLIENTPROCESSID]')

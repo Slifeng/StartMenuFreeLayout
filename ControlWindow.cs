@@ -1,4 +1,4 @@
-// MIT. Native WinForms presentation; mode, startup and deployment stay shared.
+﻿// MIT. Native WinForms presentation; mode, startup and deployment stay shared.
 #if !UNINSTALLER
 using System;
 using System.Drawing;

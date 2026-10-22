@@ -1,4 +1,4 @@
-// Experimental native Start menu extension. MIT license; see LICENSE.txt.
+﻿// Experimental native Start menu extension. MIT license; see LICENSE.txt.
 // Target component compatibility is verified by the launcher before attach.
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX

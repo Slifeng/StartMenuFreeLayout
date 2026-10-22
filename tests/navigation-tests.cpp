@@ -1,4 +1,4 @@
-#include "SpatialNavigation.h"
+﻿#include "SpatialNavigation.h"
 #include <cassert>
 #include <iostream>
 #include <algorithm>

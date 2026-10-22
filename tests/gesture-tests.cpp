@@ -1,4 +1,4 @@
-#include "PointerGesture.h"
+﻿#include "PointerGesture.h"
 #include <cassert>
 #include <iostream>
 int main() {

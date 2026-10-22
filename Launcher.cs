@@ -1,4 +1,4 @@
-// MIT license. The settings window does not replace the Windows Start menu.
+﻿// MIT license. The settings window does not replace the Windows Start menu.
 using System;
 using System.Diagnostics;
 using System.IO;

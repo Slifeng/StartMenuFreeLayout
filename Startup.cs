@@ -1,4 +1,4 @@
-// Per-user, optional logon startup. No administrator rights or system services.
+﻿// Per-user, optional logon startup. No administrator rights or system services.
 using System;
 using System.Diagnostics;
 using System.IO;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 internal static class ModePolicy
 {
     public static string Normalize(string value)

@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$Toolchain,
     [string]$WinrtHeaders,
     [string]$SdkHeaders
@@ -25,3 +25,4 @@ Write-Output '构建完成。'
 if ($LASTEXITCODE -ne 0) { throw '移动启动器编译失败。' }
 
 & (Join-Path $PSScriptRoot 'package-msi.ps1')
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Uninstall.exe') -Destination (Join-Path $PSScriptRoot '卸载.exe') -Force

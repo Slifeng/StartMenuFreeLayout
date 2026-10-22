@@ -1,4 +1,4 @@
-LIBRARY FreeLayout
+﻿LIBRARY FreeLayout
 EXPORTS
     DllGetClassObject
     DllCanUnloadNow
