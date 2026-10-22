@@ -5,12 +5,27 @@ $product='StartMenuFreeLayout';$code='{CB6777EC-54F7-4BD5-846A-A9645B219AD2}'
 if($Test){$product+='.LifecycleTest';$code='{D6446F23-B73B-4355-A5C9-3B737225E03C}'}
 $stage=Join-Path (Split-Path $Output -Parent) ('msi-build-'+[guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $stage|Out-Null
-$files=@('StartMenuFreeLayout.exe','FreeLayout.dll','Uninstall.exe','README.md')
-$ddf=@('.OPTION EXPLICIT','.Set CabinetNameTemplate=payload.cab',('.Set DiskDirectoryTemplate="'+$stage+'"'),'.Set CompressionType=MSZIP','.Set Cabinet=on','.Set Compress=on',('.Set InfFileName="'+(Join-Path $stage 'setup.inf')+'"'),('.Set RptFileName="'+(Join-Path $stage 'setup.rpt')+'"'))
-for($i=0;$i -lt $files.Count;$i++){$ddf+=('"'+(Join-Path $Payload $files[$i])+'" f'+$i)}
-[IO.File]::WriteAllLines((Join-Path $stage 'payload.ddf'),$ddf,[Text.Encoding]::Default)
-& "$env:WINDIR\System32\makecab.exe" /F (Join-Path $stage 'payload.ddf') | Out-Null
-if($LASTEXITCODE -ne 0){throw 'CAB build failed'}
+$files=@('StartMenuFreeLayout.exe','FreeLayout.dll','Uninstall.exe','开始使用.txt')
+function PayloadFile([string]$name) {
+ $path=Join-Path $Payload $name
+ if($name -eq '开始使用.txt' -and -not (Test-Path -LiteralPath $path)){
+  $path=Join-Path (Split-Path $Payload -Parent) $name
+ }
+ return $path
+}
+$ddf=@('.OPTION EXPLICIT','.Set CabinetNameTemplate=payload.cab','.Set DiskDirectoryTemplate=.', '.Set CompressionType=MSZIP','.Set Cabinet=on','.Set Compress=on','.Set InfFileName=setup.inf','.Set RptFileName=setup.rpt')
+# Use ASCII, relative staging names so MakeCab can handle localized payload names.
+for($i=0;$i -lt $files.Count;$i++){
+ $inputName='input-'+$i+'.bin'
+ Copy-Item -LiteralPath (PayloadFile $files[$i]) -Destination (Join-Path $stage $inputName)
+ $ddf+=('"'+$inputName+'" f'+$i)
+}
+[IO.File]::WriteAllLines((Join-Path $stage 'payload.ddf'),$ddf,[Text.Encoding]::ASCII)
+Push-Location -LiteralPath $stage
+try {
+ & "$env:WINDIR\System32\makecab.exe" /F payload.ddf | Out-Null
+ if($LASTEXITCODE -ne 0){throw 'CAB build failed'}
+}finally{Pop-Location}
 if(Test-Path -LiteralPath $Output){Remove-Item -LiteralPath $Output}
 $installer=New-Object -ComObject WindowsInstaller.Installer
 $db=$installer.OpenDatabase($Output,3)
@@ -55,7 +70,7 @@ for($i=0;$i -lt $files.Count;$i++) {
  $idBytes=New-Object byte[] 16;[Array]::Copy($hash,$idBytes,16);$componentId=New-Object Guid -ArgumentList (,$idBytes)
  Row Component @($component,('{'+$componentId.ToString().ToUpperInvariant()+'}'),'APPDIR',256,$null,$file)
  Row FeatureComponents @('Main',$component)
- Row File @($file,$component,('F'+$i+'|'+$files[$i]),[int](Get-Item -LiteralPath (Join-Path $Payload $files[$i])).Length,$null,$null,16384,($i+1))
+ Row File @($file,$component,('F'+$i+'|'+$files[$i]),[int](Get-Item -LiteralPath (PayloadFile $files[$i])).Length,$null,$null,16384,($i+1))
 }
 Row Media @(1,4,$null,'#payload.cab',$null,$null)
 # The installer owns these keys. The * entry removes the complete private key,

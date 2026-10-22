@@ -1,4 +1,4 @@
-﻿*.exe
+*.exe
 *.dll
 *.msi
 *.pdb
@@ -13,6 +13,6 @@ layout-*.ini
 布局备份*.ini
 
 # Distribute the installer, launcher and uninstaller at repository root.
-!/启动开始菜单自由布局.exe
-!/卸载.exe
-!/StartMenuFreeLayout-v0.0.0-x64.msi
+!/StartMenuFreeLayout/启动开始菜单自由布局.exe
+!/StartMenuFreeLayout/卸载.exe
+!/StartMenuFreeLayout/StartMenuFreeLayout-v0.0.0-x64.msi

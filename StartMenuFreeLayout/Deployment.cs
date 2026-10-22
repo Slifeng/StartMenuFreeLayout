@@ -77,7 +77,7 @@ public static class Deployment
             NoLinks(Root);
             if(!File.Exists(Marker)&&Directory.EnumerateFileSystemEntries(Root).Any()) {
                 string app=Path.Combine(Root,"App"),version=Path.Combine(app,Version);
-                string[] allowed={"StartMenuFreeLayout.exe","FreeLayout.dll","Uninstall.exe","README.md"};
+                string[] allowed={"StartMenuFreeLayout.exe","FreeLayout.dll","Uninstall.exe","README.md","开始使用.txt"};
                 bool msiFiles=String.Equals(Path.GetDirectoryName(AssemblyPath),version,StringComparison.OrdinalIgnoreCase)
                     &&Directory.GetDirectories(Root,"*",SearchOption.AllDirectories).All(d=>String.Equals(d,app,StringComparison.OrdinalIgnoreCase)||String.Equals(d,version,StringComparison.OrdinalIgnoreCase))
                     &&Directory.GetFiles(Root,"*",SearchOption.AllDirectories).All(f=>String.Equals(Path.GetDirectoryName(f),version,StringComparison.OrdinalIgnoreCase)&&allowed.Contains(Path.GetFileName(f),StringComparer.OrdinalIgnoreCase));

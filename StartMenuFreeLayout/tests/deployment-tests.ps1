@@ -10,7 +10,7 @@ foreach($name in @('StartMenuFreeLayout','Uninstall')) {
  & $csc /nologo /target:winexe /platform:x64 "/define:$defines" "/out:$TestBase\$name.exe" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll @sources
  if($LASTEXITCODE -ne 0){throw 'Test build failed'}
 }
-Copy-Item -LiteralPath (Join-Path $source 'FreeLayout.dll'),(Join-Path $source 'README.md') -Destination $TestBase
+Copy-Item -LiteralPath (Join-Path $source 'FreeLayout.dll'),(Join-Path (Split-Path $source -Parent) '开始使用.txt') -Destination $TestBase
 $package=Join-Path $TestBase 'Test.msi'
 & (Join-Path $source 'package-msi.ps1') -Payload $TestBase -Output $package -Test
 $product='StartMenuFreeLayout.LifecycleTest'
